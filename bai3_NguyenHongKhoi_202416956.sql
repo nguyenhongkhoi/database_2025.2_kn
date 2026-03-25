@@ -1,0 +1,117 @@
+use QLBongDa;
+go
+
+--bai a phan 1
+select MACT, HOTEN, SO, VITRI, NGAYSINH, DIACHI 
+from CAUTHU;
+--2
+select * from CAUTHU 
+where SO = 7 and VITRI = 'Tiền vệ';
+--3
+select TENHLV, NGAYSINH, DIACHI, DIENTHOAI 
+from HUANLUYENVIEN;
+--4
+select CT.* from CAUTHU CT
+join CAULACBO CLB on CT.MACLB = CLB.MACLB
+join QUOCGIA QG on CT.MAQG = QG.MAQG
+where QG.TENQG = 'Việt Nam' and CLB.TENCLB = 'BECAMEX BÌNH DƯƠNG';
+--5 
+select CT.MACT, CT.HOTEN, CT.NGAYSINH, CT.DIACHI, CT.VITRI
+from CAUTHU CT
+join CAULACBO CLB on CT.MACLB = CLB.MACLB
+join QUOCGIA QG on CT.MAQG = QG.MAQG
+where CLB.TENCLB = 'SHB ĐÀ NẴNG' and QG.TENQG = 'Việt Nam';
+--6
+select CT.*
+from CAUTHU CT
+join CAULACBO CLB on CT.MACLB = CLB.MACLB
+join SANVD S on CLB.MASAN = S.MASAN
+where S.TENSAN = 'Long An';
+--7
+select T.MATRAN, T.NGAYTD, S.TENSAN, C1.TENCLB as TENCLB1, C2.TENCLB as TENCLB2, T.KETQUA
+from TRANDAU T
+join SANVD S on T.MASAN = S.MASAN
+join CAULACBO C1 on T.MACLB1 = C1.MACLB
+join CAULACBO C2 on T.MACLB2 = C2.MACLB
+where T.VONG = 2 and T.NAM = 2009;
+--8
+select H.MAHLV, H.TENHLV, H.NGAYSINH, H.DIACHI, HC.VAITRO, C.TENCLB
+from HUANLUYENVIEN H
+join HLV_CLB HC on H.MAHLV = HC.MAHLV
+join CAULACBO C on HC.MACLB = C.MACLB
+join QUOCGIA Q on H.MAQG = Q.MAQG
+where Q.TENQG = 'Việt Nam';  
+--9
+select top 3 C.TENCLB
+from CAULACBO C
+join BANGXH B on C.MACLB = B.MACLB
+where B.VONG = 3 and B.NAM = 2009
+order by B.DIEM desc;
+--10
+select H.MAHLV, H.TENHLV, H.NGAYSINH, H.DIACHI, HC.VAITRO, C.TENCLB
+from HUANLUYENVIEN H
+join HLV_CLB HC on H.MAHLV = HC.MAHLV
+join CAULACBO C on HC.MACLB = C.MACLB
+join TINH T on C.MATINH = T.MATINH
+where T.TENTINH = 'Bình Dương';
+
+--baib
+--1
+select C.TENCLB, count(CT.MACT) as SO_LUONG_CAU_THU
+from CAULACBO C
+left join CAUTHU CT on C.MACLB = CT.MACLB
+group by C.TENCLB;
+--2
+select C.TENCLB, count(CT.MACT) as SO_LUONG_CT_NUOC_NGOAI
+from CAULACBO C
+join CAUTHU CT on C.MACLB = CT.MACLB
+join QUOCGIA QG on CT.MAQG = QG.MAQG
+where QG.TENQG <> 'Việt Nam'
+group by C.TENCLB;
+--3
+select C.MACLB, C.TENCLB, S.TENSAN, S.DIACHI, count(CT.MACT) as SO_LUONG_CT_NUOC_NGOAI
+from CAULACBO C
+join SANVD S on C.MASAN = S.MASAN
+join CAUTHU CT on C.MACLB = CT.MACLB
+join QUOCGIA QG on CT.MAQG = QG.MAQG
+where QG.TENQG <> 'Việt Nam'
+group by C.MACLB, C.TENCLB, S.TENSAN, S.DIACHI
+having count(CT.MACT) > 2;
+--4
+select T.TENTINH, count(CT.MACT) as SO_LUONG_TIEN_DAO
+from TINH T
+join CAULACBO C on T.MATINH = C.MATINH
+join CAUTHU CT on C.MACLB = CT.MACLB
+where CT.VITRI = 'Tiền đạo'
+group by T.TENTINH;
+--5
+select C.TENCLB, T.TENTINH
+from CAULACBO C
+join TINH T on C.MATINH = T.MATINH
+join BANGXH B on C.MACLB = B.MACLB
+where B.VONG = 3 and B.NAM = 2009 and B.HANG = 1;
+
+--c1
+select H.TENHLV
+from HUANLUYENVIEN H
+join HLV_CLB HC on H.MAHLV = HC.MAHLV
+where H.DIENTHOAI is null or H.DIENTHOAI = '';
+--c2
+select H.TENHLV
+from HUANLUYENVIEN H
+join QUOCGIA QG on H.MAQG = QG.MAQG
+where QG.TENQG = N'Việt Nam'
+and H.MAHLV not in (select MAHLV from HLV_CLB);
+--c3
+select CT.*
+from CAUTHU CT
+join BANGXH B on CT.MACLB = B.MACLB
+where B.VONG = 3 and B.NAM = 2009 and (B.HANG > 6 or B.HANG < 3);
+--c4
+select T.NGAYTD, S.TENSAN, C1.TENCLB as TENCLB1, C2.TENCLB as TENCLB2, T.KETQUA
+from TRANDAU T
+join SANVD S on T.MASAN = S.MASAN
+join CAULACBO C1 on T.MACLB1 = C1.MACLB
+join CAULACBO C2 on T.MACLB2 = C2.MACLB
+where T.MACLB1 = (select MACLB from BANGXH where VONG = 3 and NAM = 2009 and HANG = 1)
+   or T.MACLB2 = (select MACLB from BANGXH where VONG = 3 and NAM = 2009 and HANG = 1);
